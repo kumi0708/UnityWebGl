@@ -1,6 +1,6 @@
 {
 "companyName": "DefaultCompany",
-"productName": "Audio",
+"productName": "UnityWebGLMicrophone",
 "dataUrl": "app.data.unityweb",
 "asmCodeUrl": "app.asm.code.unityweb",
 "asmMemoryUrl": "app.asm.memory.unityweb",
