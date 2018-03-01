@@ -1520,7 +1520,7 @@ function _emscripten_asm_const_v(code) {
  return ASM_CONSTS[code]();
 }
 STATIC_BASE = 8;
-STATICTOP = Runtime.alignMemory(STATIC_BASE, 16) + 1372512;
+STATICTOP = Runtime.alignMemory(STATIC_BASE, 16) + 1470272;
 __ATINIT__.push({
  func: (function() {
   __GLOBAL__sub_I_runtime_ai_internal_0_cpp();
@@ -2291,7 +2291,7 @@ __ATINIT__.push({
  })
 }, {
  func: (function() {
-  __GLOBAL__sub_I_Thread_cpp_31815();
+  __GLOBAL__sub_I_Thread_cpp_10675();
  })
 }, {
  func: (function() {
@@ -2315,7 +2315,7 @@ __ATINIT__.push({
  })
 }, {
  func: (function() {
-  __GLOBAL__sub_I_Assembly_cpp_32440();
+  __GLOBAL__sub_I_Assembly_cpp_11299();
  })
 }, {
  func: (function() {
@@ -2323,11 +2323,7 @@ __ATINIT__.push({
  })
 }, {
  func: (function() {
-  __GLOBAL__sub_I_Runtime_cpp_32999();
- })
-}, {
- func: (function() {
-  __GLOBAL__sub_I_Il2CppCodeRegistration_cpp();
+  __GLOBAL__sub_I_Runtime_cpp_11859();
  })
 }, {
  func: (function() {
@@ -2344,6 +2340,10 @@ __ATINIT__.push({
 }, {
  func: (function() {
   __GLOBAL__sub_I_Path_cpp();
+ })
+}, {
+ func: (function() {
+  __GLOBAL__sub_I_Il2CppCodeRegistration_cpp();
  })
 });
 memoryInitializer = "build.js.mem";
@@ -8417,6 +8417,26 @@ function ___cxa_rethrow() {
 function _emscripten_glClear(x0) {
  GLctx["clear"](x0);
 }
+function _emscripten_get_now() {
+ abort();
+}
+function _emscripten_get_now_is_monotonic() {
+ return ENVIRONMENT_IS_NODE || typeof dateNow !== "undefined" || (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) && self["performance"] && self["performance"]["now"];
+}
+function _clock_gettime(clk_id, tp) {
+ var now;
+ if (clk_id === 0) {
+  now = Date.now();
+ } else if (clk_id === 1 && _emscripten_get_now_is_monotonic()) {
+  now = _emscripten_get_now();
+ } else {
+  ___setErrNo(ERRNO_CODES.EINVAL);
+  return -1;
+ }
+ HEAP32[tp >> 2] = now / 1e3 | 0;
+ HEAP32[tp + 4 >> 2] = now % 1e3 * 1e3 * 1e3 | 0;
+ return 0;
+}
 function _glDeleteRenderbuffers(n, renderbuffers) {
  for (var i = 0; i < n; i++) {
   var id = HEAP32[renderbuffers + i * 4 >> 2];
@@ -9170,9 +9190,6 @@ function _emscripten_set_main_loop_timing(mode, value) {
  }
  return 0;
 }
-function _emscripten_get_now() {
- abort();
-}
 function _emscripten_set_main_loop(func, fps, simulateInfiniteLoop, arg, noSetTiming) {
  Module["noExitRuntime"] = true;
  assert(!Browser.mainLoop.func, "emscripten_set_main_loop: there can only be one main loop function at once: call emscripten_cancel_main_loop to cancel the previous one before setting a new one with different parameters.");
@@ -9372,6 +9389,9 @@ function _emscripten_exit_fullscreen() {
   Module["dynCall_iiii"](__currentFullscreenStrategy.canvasResizedCallback, 37, 0, __currentFullscreenStrategy.canvasResizedCallbackUserData);
  }
  return 0;
+}
+function _JS_SystemInfo_GetCurrentCanvasWidth() {
+ return Module["canvas"].clientWidth;
 }
 function _glUniform4uiv(location, count, value) {
  location = GL.uniforms[location];
@@ -14482,8 +14502,8 @@ function _glBufferData(target, size, data, usage) {
   GLctx.bufferData(target, HEAPU8.subarray(data, data + size), usage);
  }
 }
-function _JS_SystemInfo_GetCurrentCanvasWidth() {
- return Module["canvas"].clientWidth;
+function _sched_yield() {
+ return 0;
 }
 function _emscripten_glGetRenderbufferParameteriv(target, pname, params) {
  if (!params) {
@@ -14888,6 +14908,24 @@ if (ENVIRONMENT_IS_NODE) {
  NODEFS.staticInit();
 }
 ___buildEnvironment(ENV);
+if (ENVIRONMENT_IS_NODE) {
+ _emscripten_get_now = function _emscripten_get_now_actual() {
+  var t = process["hrtime"]();
+  return t[0] * 1e3 + t[1] / 1e6;
+ };
+} else if (typeof dateNow !== "undefined") {
+ _emscripten_get_now = dateNow;
+} else if (typeof self === "object" && self["performance"] && typeof self["performance"]["now"] === "function") {
+ _emscripten_get_now = (function() {
+  return self["performance"]["now"]();
+ });
+} else if (typeof performance === "object" && typeof performance["now"] === "function") {
+ _emscripten_get_now = (function() {
+  return performance["now"]();
+ });
+} else {
+ _emscripten_get_now = Date.now;
+}
 Module["requestFullScreen"] = function Module_requestFullScreen(lockPointer, resizeCanvas, vrDevice) {
  Module.printErr("Module.requestFullScreen is deprecated. Please call Module.requestFullscreen instead.");
  Module["requestFullScreen"] = Module["requestFullscreen"];
@@ -14914,24 +14952,6 @@ Module["getUserMedia"] = function Module_getUserMedia() {
 Module["createContext"] = function Module_createContext(canvas, useWebGL, setInModule, webGLContextAttributes) {
  return Browser.createContext(canvas, useWebGL, setInModule, webGLContextAttributes);
 };
-if (ENVIRONMENT_IS_NODE) {
- _emscripten_get_now = function _emscripten_get_now_actual() {
-  var t = process["hrtime"]();
-  return t[0] * 1e3 + t[1] / 1e6;
- };
-} else if (typeof dateNow !== "undefined") {
- _emscripten_get_now = dateNow;
-} else if (typeof self === "object" && self["performance"] && typeof self["performance"]["now"] === "function") {
- _emscripten_get_now = (function() {
-  return self["performance"]["now"]();
- });
-} else if (typeof performance === "object" && typeof performance["now"] === "function") {
- _emscripten_get_now = (function() {
-  return performance["now"]();
- });
-} else {
- _emscripten_get_now = Date.now;
-}
 __ATINIT__.push((function() {
  SOCKFS.root = FS.mount(SOCKFS, {}, null);
 }));
@@ -14944,6 +14964,11 @@ staticSealed = true;
 assert(DYNAMIC_BASE < TOTAL_MEMORY, "TOTAL_MEMORY not big enough for stack");
 function nullFunc_diddi(x) {
  Module["printErr"]("Invalid function pointer called with signature 'diddi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_fiff(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'fiff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -14972,8 +14997,23 @@ function nullFunc_iidi(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_vidi(x) {
- Module["printErr"]("Invalid function pointer called with signature 'vidi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_fiiiiiifiiiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'fiiiiiifiiiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15002,6 +15042,11 @@ function nullFunc_viiiiiiiiiiiiiii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_fii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'fii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15012,6 +15057,11 @@ function nullFunc_di(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viff(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_iiifiii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'iiifiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15019,6 +15069,11 @@ function nullFunc_iiifiii(x) {
 }
 function nullFunc_viffff(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viffff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_viiffiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiffiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15047,6 +15102,11 @@ function nullFunc_vdddddd(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iiiiiiiiiiiiffffii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiiiiiiiiiffffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_vdd(x) {
  Module["printErr"]("Invalid function pointer called with signature 'vdd'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15067,13 +15127,23 @@ function nullFunc_viifii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_vifiiiiiiiiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_iiiiiiif(x) {
  Module["printErr"]("Invalid function pointer called with signature 'iiiiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_iiififiiii(x) {
- Module["printErr"]("Invalid function pointer called with signature 'iiififiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_viidi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viidi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15107,8 +15177,8 @@ function nullFunc_iiiiiiiiiiiiii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_viiiiif(x) {
- Module["printErr"]("Invalid function pointer called with signature 'viiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiiiiiiiiiiiiiiiiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15117,8 +15187,8 @@ function nullFunc_viffi(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_viff(x) {
- Module["printErr"]("Invalid function pointer called with signature 'viff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_iiiifiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiifiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15157,6 +15227,11 @@ function nullFunc_iiiiiifffiiifii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iifff(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iifff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_iifiii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'iifiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15169,6 +15244,11 @@ function nullFunc_fiif(x) {
 }
 function nullFunc_v(x) {
  Module["printErr"]("Invalid function pointer called with signature 'v'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15197,8 +15277,18 @@ function nullFunc_iiiiii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viiiiiiffii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiiiiiffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_viidii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viidii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiiifiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiiifiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15237,8 +15327,13 @@ function nullFunc_difi(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_viidi(x) {
- Module["printErr"]("Invalid function pointer called with signature 'viidi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_fi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'fi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiififiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiififiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15247,13 +15342,18 @@ function nullFunc_vf(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_viiiiiiffii(x) {
- Module["printErr"]("Invalid function pointer called with signature 'viiiiiiffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_fiiiiiiiifiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'fiiiiiiiifiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
 function nullFunc_viffffii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viffffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_vifiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15267,13 +15367,38 @@ function nullFunc_viiiiiiiiiiiii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iiiiiiiiiiffffii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiiiiiiiffffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_viiiiiiii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_vifiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_viiiiiii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_vifiiiiiiiiiiiiiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiiiiiiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15312,6 +15437,11 @@ function nullFunc_vffff(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viiiifiiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiiifiiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_viififi(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viififi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15334,6 +15464,11 @@ function nullFunc_viif(x) {
 }
 function nullFunc_fiiifi(x) {
  Module["printErr"]("Invalid function pointer called with signature 'fiiifi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiifi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiifi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15377,6 +15512,16 @@ function nullFunc_viifi(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iiiiifiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiiifiiiiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiiifiiiiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_viiff(x) {
  Module["printErr"]("Invalid function pointer called with signature 'viiff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15392,8 +15537,23 @@ function nullFunc_vidii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viiif(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiif'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_fifffi(x) {
  Module["printErr"]("Invalid function pointer called with signature 'fifffi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_vifiiiiiiiiiiiiiiiiiiiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vifiiiiiiiiiiiiiiiiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_iiiffii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiffii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15417,8 +15577,8 @@ function nullFunc_viifff(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_viiffiii(x) {
- Module["printErr"]("Invalid function pointer called with signature 'viiffiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_viiffi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiffi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15452,6 +15612,11 @@ function nullFunc_iiiiiiiiiiiii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_iiiifiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiifiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_ff(x) {
  Module["printErr"]("Invalid function pointer called with signature 'ff'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15462,8 +15627,8 @@ function nullFunc_iidii(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
-function nullFunc_fi(x) {
- Module["printErr"]("Invalid function pointer called with signature 'fi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+function nullFunc_iiiifiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'iiiifiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
@@ -15492,6 +15657,16 @@ function nullFunc_vff(x) {
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
  abort(x);
 }
+function nullFunc_viiifiiiii(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'viiifiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
+function nullFunc_vidi(x) {
+ Module["printErr"]("Invalid function pointer called with signature 'vidi'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
+ Module["printErr"]("Build with ASSERTIONS=2 for more info.");
+ abort(x);
+}
 function nullFunc_iiiiiiiii(x) {
  Module["printErr"]("Invalid function pointer called with signature 'iiiiiiiii'. Perhaps this is an invalid value (e.g. caused by calling a virtual method on a NULL pointer)? Or calling a function with an incorrect type, which will fail? (it is worth building your source files with -Werror (warnings are errors), as warnings can indicate undefined behavior which can cause this)");
  Module["printErr"]("Build with ASSERTIONS=2 for more info.");
@@ -15505,6 +15680,14 @@ function nullFunc_viffffi(x) {
 function invoke_diddi(index, a1, a2, a3, a4) {
  try {
   return Module["dynCall_diddi"](index, a1, a2, a3, a4);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_fiff(index, a1, a2, a3) {
+ try {
+  return Module["dynCall_fiff"](index, a1, a2, a3);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15550,9 +15733,33 @@ function invoke_iidi(index, a1, a2, a3) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_vidi(index, a1, a2, a3) {
+function invoke_fiiiiiifiiiiiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) {
  try {
-  Module["dynCall_vidi"](index, a1, a2, a3);
+  return Module["dynCall_fiiiiiifiiiiiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifiif(index, a1, a2, a3, a4, a5, a6, a7, a8) {
+ try {
+  return Module["dynCall_iiiiifiif"](index, a1, a2, a3, a4, a5, a6, a7, a8);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifii(index, a1, a2, a3, a4, a5, a6, a7) {
+ try {
+  return Module["dynCall_iiiiifii"](index, a1, a2, a3, a4, a5, a6, a7);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifiii(index, a1, a2, a3, a4, a5, a6, a7, a8) {
+ try {
+  return Module["dynCall_iiiiifiii"](index, a1, a2, a3, a4, a5, a6, a7, a8);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15598,6 +15805,14 @@ function invoke_viiiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viiiiif(index, a1, a2, a3, a4, a5, a6) {
+ try {
+  Module["dynCall_viiiiif"](index, a1, a2, a3, a4, a5, a6);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_fii(index, a1, a2) {
  try {
   return Module["dynCall_fii"](index, a1, a2);
@@ -15614,6 +15829,14 @@ function invoke_di(index, a1) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viff(index, a1, a2, a3) {
+ try {
+  Module["dynCall_viff"](index, a1, a2, a3);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_iiifiii(index, a1, a2, a3, a4, a5, a6) {
  try {
   return Module["dynCall_iiifiii"](index, a1, a2, a3, a4, a5, a6);
@@ -15625,6 +15848,14 @@ function invoke_iiifiii(index, a1, a2, a3, a4, a5, a6) {
 function invoke_viffff(index, a1, a2, a3, a4, a5) {
  try {
   Module["dynCall_viffff"](index, a1, a2, a3, a4, a5);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_viiffiii(index, a1, a2, a3, a4, a5, a6, a7) {
+ try {
+  Module["dynCall_viiffiii"](index, a1, a2, a3, a4, a5, a6, a7);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15670,6 +15901,14 @@ function invoke_vdddddd(index, a1, a2, a3, a4, a5, a6) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iiiiiiiiiiiiffffii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17) {
+ try {
+  return Module["dynCall_iiiiiiiiiiiiffffii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_vdd(index, a1, a2) {
  try {
   Module["dynCall_vdd"](index, a1, a2);
@@ -15702,6 +15941,22 @@ function invoke_viifii(index, a1, a2, a3, a4, a5) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_vifiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) {
+ try {
+  Module["dynCall_vifiiiiiiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34) {
+ try {
+  Module["dynCall_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, a32, a33, a34);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_iiiiiiif(index, a1, a2, a3, a4, a5, a6, a7) {
  try {
   return Module["dynCall_iiiiiiif"](index, a1, a2, a3, a4, a5, a6, a7);
@@ -15710,9 +15965,9 @@ function invoke_iiiiiiif(index, a1, a2, a3, a4, a5, a6, a7) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_iiififiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+function invoke_viidi(index, a1, a2, a3, a4) {
  try {
-  return Module["dynCall_iiififiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+  Module["dynCall_viidi"](index, a1, a2, a3, a4);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15766,9 +16021,9 @@ function invoke_iiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a
   asm["setThrew"](1, 0);
  }
 }
-function invoke_viiiiif(index, a1, a2, a3, a4, a5, a6) {
+function invoke_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30) {
  try {
-  Module["dynCall_viiiiif"](index, a1, a2, a3, a4, a5, a6);
+  Module["dynCall_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15782,9 +16037,9 @@ function invoke_viffi(index, a1, a2, a3, a4) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_viff(index, a1, a2, a3) {
+function invoke_iiiifiiii(index, a1, a2, a3, a4, a5, a6, a7, a8) {
  try {
-  Module["dynCall_viff"](index, a1, a2, a3);
+  return Module["dynCall_iiiifiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15846,6 +16101,14 @@ function invoke_iiiiiifffiiifii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, 
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iifff(index, a1, a2, a3, a4) {
+ try {
+  return Module["dynCall_iifff"](index, a1, a2, a3, a4);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_iifiii(index, a1, a2, a3, a4, a5) {
  try {
   return Module["dynCall_iifiii"](index, a1, a2, a3, a4, a5);
@@ -15865,6 +16128,14 @@ function invoke_fiif(index, a1, a2, a3) {
 function invoke_v(index) {
  try {
   Module["dynCall_v"](index);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifiiiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+ try {
+  return Module["dynCall_iiiiifiiiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15910,9 +16181,25 @@ function invoke_iiiiii(index, a1, a2, a3, a4, a5) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viiiiiiffii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+ try {
+  Module["dynCall_viiiiiiffii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_viidii(index, a1, a2, a3, a4, a5) {
  try {
   Module["dynCall_viidii"](index, a1, a2, a3, a4, a5);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiiifiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+ try {
+  return Module["dynCall_iiiiiifiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15974,9 +16261,17 @@ function invoke_difi(index, a1, a2, a3) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_viidi(index, a1, a2, a3, a4) {
+function invoke_fi(index, a1) {
  try {
-  Module["dynCall_viidi"](index, a1, a2, a3, a4);
+  return Module["dynCall_fi"](index, a1);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiififiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+ try {
+  return Module["dynCall_iiififiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -15990,9 +16285,9 @@ function invoke_vf(index, a1) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_viiiiiiffii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+function invoke_fiiiiiiiifiiiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) {
  try {
-  Module["dynCall_viiiiiiffii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  return Module["dynCall_fiiiiiiiifiiiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16001,6 +16296,14 @@ function invoke_viiiiiiffii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
 function invoke_viffffii(index, a1, a2, a3, a4, a5, a6, a7) {
  try {
   Module["dynCall_viffffii"](index, a1, a2, a3, a4, a5, a6, a7);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_vifiii(index, a1, a2, a3, a4, a5) {
+ try {
+  Module["dynCall_vifiii"](index, a1, a2, a3, a4, a5);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16022,6 +16325,22 @@ function invoke_viiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iiiiiiiiiiffffii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) {
+ try {
+  return Module["dynCall_iiiiiiiiiiffffii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifi(index, a1, a2, a3, a4, a5, a6) {
+ try {
+  return Module["dynCall_iiiiifi"](index, a1, a2, a3, a4, a5, a6);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_viiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8) {
  try {
   Module["dynCall_viiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8);
@@ -16030,9 +16349,33 @@ function invoke_viiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iif(index, a1, a2) {
+ try {
+  return Module["dynCall_iif"](index, a1, a2);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_vifiiii(index, a1, a2, a3, a4, a5, a6) {
+ try {
+  Module["dynCall_vifiiii"](index, a1, a2, a3, a4, a5, a6);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_viiiiiii(index, a1, a2, a3, a4, a5, a6, a7) {
  try {
   Module["dynCall_viiiiiii"](index, a1, a2, a3, a4, a5, a6, a7);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_vifiiiiiiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20) {
+ try {
+  Module["dynCall_vifiiiiiiiiiiiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16094,6 +16437,14 @@ function invoke_vffff(index, a1, a2, a3, a4) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viiiifiiiiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) {
+ try {
+  Module["dynCall_viiiifiiiiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_viififi(index, a1, a2, a3, a4, a5, a6) {
  try {
   Module["dynCall_viififi"](index, a1, a2, a3, a4, a5, a6);
@@ -16129,6 +16480,14 @@ function invoke_viif(index, a1, a2, a3) {
 function invoke_fiiifi(index, a1, a2, a3, a4, a5) {
  try {
   return Module["dynCall_fiiifi"](index, a1, a2, a3, a4, a5);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiifi(index, a1, a2, a3, a4, a5) {
+ try {
+  return Module["dynCall_iiiifi"](index, a1, a2, a3, a4, a5);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16198,6 +16557,22 @@ function invoke_viifi(index, a1, a2, a3, a4) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iiiiifiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) {
+ try {
+  return Module["dynCall_iiiiifiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiiifiiiiif(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) {
+ try {
+  return Module["dynCall_iiiiifiiiiif"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_viiff(index, a1, a2, a3, a4) {
  try {
   Module["dynCall_viiff"](index, a1, a2, a3, a4);
@@ -16222,9 +16597,33 @@ function invoke_vidii(index, a1, a2, a3, a4) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viiif(index, a1, a2, a3, a4) {
+ try {
+  Module["dynCall_viiif"](index, a1, a2, a3, a4);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_fifffi(index, a1, a2, a3, a4, a5) {
  try {
   return Module["dynCall_fifffi"](index, a1, a2, a3, a4, a5);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_vifiiiiiiiiiiiiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25) {
+ try {
+  Module["dynCall_vifiiiiiiiiiiiiiiiiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_iiiffii(index, a1, a2, a3, a4, a5, a6) {
+ try {
+  return Module["dynCall_iiiffii"](index, a1, a2, a3, a4, a5, a6);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16262,9 +16661,9 @@ function invoke_viifff(index, a1, a2, a3, a4, a5) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_viiffiii(index, a1, a2, a3, a4, a5, a6, a7) {
+function invoke_viiffi(index, a1, a2, a3, a4, a5) {
  try {
-  Module["dynCall_viiffiii"](index, a1, a2, a3, a4, a5, a6, a7);
+  Module["dynCall_viiffi"](index, a1, a2, a3, a4, a5);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16318,6 +16717,14 @@ function invoke_iiiiiiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a1
   asm["setThrew"](1, 0);
  }
 }
+function invoke_iiiifiii(index, a1, a2, a3, a4, a5, a6, a7) {
+ try {
+  return Module["dynCall_iiiifiii"](index, a1, a2, a3, a4, a5, a6, a7);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_ff(index, a1) {
  try {
   return Module["dynCall_ff"](index, a1);
@@ -16334,9 +16741,9 @@ function invoke_iidii(index, a1, a2, a3, a4) {
   asm["setThrew"](1, 0);
  }
 }
-function invoke_fi(index, a1) {
+function invoke_iiiifiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
  try {
-  return Module["dynCall_fi"](index, a1);
+  return Module["dynCall_iiiifiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9);
  } catch (e) {
   if (typeof e !== "number" && e !== "longjmp") throw e;
   asm["setThrew"](1, 0);
@@ -16382,6 +16789,22 @@ function invoke_vff(index, a1, a2) {
   asm["setThrew"](1, 0);
  }
 }
+function invoke_viiifiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+ try {
+  Module["dynCall_viiifiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
+function invoke_vidi(index, a1, a2, a3) {
+ try {
+  Module["dynCall_vidi"](index, a1, a2, a3);
+ } catch (e) {
+  if (typeof e !== "number" && e !== "longjmp") throw e;
+  asm["setThrew"](1, 0);
+ }
+}
 function invoke_iiiiiiiii(index, a1, a2, a3, a4, a5, a6, a7, a8) {
  try {
   return Module["dynCall_iiiiiiiii"](index, a1, a2, a3, a4, a5, a6, a7, a8);
@@ -16419,41 +16842,51 @@ Module.asmLibraryArg = {
  "abortOnCannotGrowMemory": abortOnCannotGrowMemory,
  "abortStackOverflow": abortStackOverflow,
  "nullFunc_diddi": nullFunc_diddi,
+ "nullFunc_fiff": nullFunc_fiff,
  "nullFunc_fifi": nullFunc_fifi,
  "nullFunc_iiiiiii": nullFunc_iiiiiii,
  "nullFunc_viiiiiiiiiii": nullFunc_viiiiiiiiiii,
  "nullFunc_fff": nullFunc_fff,
  "nullFunc_iidi": nullFunc_iidi,
- "nullFunc_vidi": nullFunc_vidi,
+ "nullFunc_fiiiiiifiiiiiif": nullFunc_fiiiiiifiiiiiif,
+ "nullFunc_iiiiifiif": nullFunc_iiiiifiif,
+ "nullFunc_iiiiifii": nullFunc_iiiiifii,
+ "nullFunc_iiiiifiii": nullFunc_iiiiifiii,
  "nullFunc_iiffi": nullFunc_iiffi,
  "nullFunc_iiiiiiiiiiii": nullFunc_iiiiiiiiiiii,
  "nullFunc_iidiii": nullFunc_iidiii,
  "nullFunc_fif": nullFunc_fif,
  "nullFunc_viiiiiiiiiiiiiii": nullFunc_viiiiiiiiiiiiiii,
+ "nullFunc_viiiiif": nullFunc_viiiiif,
  "nullFunc_fii": nullFunc_fii,
  "nullFunc_di": nullFunc_di,
+ "nullFunc_viff": nullFunc_viff,
  "nullFunc_iiifiii": nullFunc_iiifiii,
  "nullFunc_viffff": nullFunc_viffff,
+ "nullFunc_viiffiii": nullFunc_viiffiii,
  "nullFunc_dii": nullFunc_dii,
  "nullFunc_iifii": nullFunc_iifii,
  "nullFunc_didi": nullFunc_didi,
  "nullFunc_iiiiiiiiii": nullFunc_iiiiiiiiii,
  "nullFunc_vdddddd": nullFunc_vdddddd,
+ "nullFunc_iiiiiiiiiiiiffffii": nullFunc_iiiiiiiiiiiiffffii,
  "nullFunc_vdd": nullFunc_vdd,
  "nullFunc_iiiiiiii": nullFunc_iiiiiiii,
  "nullFunc_viiiififii": nullFunc_viiiififii,
  "nullFunc_viifii": nullFunc_viifii,
+ "nullFunc_vifiiiiiiiiiiiii": nullFunc_vifiiiiiiiiiiiii,
+ "nullFunc_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii": nullFunc_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii,
  "nullFunc_iiiiiiif": nullFunc_iiiiiiif,
- "nullFunc_iiififiiii": nullFunc_iiififiiii,
+ "nullFunc_viidi": nullFunc_viidi,
  "nullFunc_iiiii": nullFunc_iiiii,
  "nullFunc_viffffiii": nullFunc_viffffiii,
  "nullFunc_fiffi": nullFunc_fiffi,
  "nullFunc_iiifii": nullFunc_iiifii,
  "nullFunc_viiiiiiiiiiiiiiiii": nullFunc_viiiiiiiiiiiiiiiii,
  "nullFunc_iiiiiiiiiiiiii": nullFunc_iiiiiiiiiiiiii,
- "nullFunc_viiiiif": nullFunc_viiiiif,
+ "nullFunc_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii": nullFunc_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii,
  "nullFunc_viffi": nullFunc_viffi,
- "nullFunc_viff": nullFunc_viff,
+ "nullFunc_iiiifiiii": nullFunc_iiiifiiii,
  "nullFunc_vifi": nullFunc_vifi,
  "nullFunc_vifff": nullFunc_vifff,
  "nullFunc_viiiiii": nullFunc_viiiiii,
@@ -16461,15 +16894,19 @@ Module.asmLibraryArg = {
  "nullFunc_viiiiiiiiiiiiii": nullFunc_viiiiiiiiiiiiii,
  "nullFunc_fiii": nullFunc_fiii,
  "nullFunc_iiiiiifffiiifii": nullFunc_iiiiiifffiiifii,
+ "nullFunc_iifff": nullFunc_iifff,
  "nullFunc_iifiii": nullFunc_iifiii,
  "nullFunc_fiif": nullFunc_fiif,
  "nullFunc_v": nullFunc_v,
+ "nullFunc_iiiiifiiiif": nullFunc_iiiiifiiiif,
  "nullFunc_iiddi": nullFunc_iiddi,
  "nullFunc_viiiiiiiiii": nullFunc_viiiiiiiiii,
  "nullFunc_diii": nullFunc_diii,
  "nullFunc_fiiii": nullFunc_fiiii,
  "nullFunc_iiiiii": nullFunc_iiiiii,
+ "nullFunc_viiiiiiffii": nullFunc_viiiiiiffii,
  "nullFunc_viidii": nullFunc_viidii,
+ "nullFunc_iiiiiifiif": nullFunc_iiiiiifiif,
  "nullFunc_viiii": nullFunc_viiii,
  "nullFunc_viiiii": nullFunc_viiiii,
  "nullFunc_vif": nullFunc_vif,
@@ -16477,14 +16914,21 @@ Module.asmLibraryArg = {
  "nullFunc_iiidi": nullFunc_iiidi,
  "nullFunc_vii": nullFunc_vii,
  "nullFunc_difi": nullFunc_difi,
- "nullFunc_viidi": nullFunc_viidi,
+ "nullFunc_fi": nullFunc_fi,
+ "nullFunc_iiififiiii": nullFunc_iiififiiii,
  "nullFunc_vf": nullFunc_vf,
- "nullFunc_viiiiiiffii": nullFunc_viiiiiiffii,
+ "nullFunc_fiiiiiiiifiiiif": nullFunc_fiiiiiiiifiiiif,
  "nullFunc_viffffii": nullFunc_viffffii,
+ "nullFunc_vifiii": nullFunc_vifiii,
  "nullFunc_diiii": nullFunc_diiii,
  "nullFunc_viiiiiiiiiiiii": nullFunc_viiiiiiiiiiiii,
+ "nullFunc_iiiiiiiiiiffffii": nullFunc_iiiiiiiiiiffffii,
+ "nullFunc_iiiiifi": nullFunc_iiiiifi,
  "nullFunc_viiiiiiii": nullFunc_viiiiiiii,
+ "nullFunc_iif": nullFunc_iif,
+ "nullFunc_vifiiii": nullFunc_vifiiii,
  "nullFunc_viiiiiii": nullFunc_viiiiiii,
+ "nullFunc_vifiiiiiiiiiiiiiiiiii": nullFunc_vifiiiiiiiiiiiiiiiiii,
  "nullFunc_viiiiiiiii": nullFunc_viiiiiiiii,
  "nullFunc_viiiiiif": nullFunc_viiiiiif,
  "nullFunc_iii": nullFunc_iii,
@@ -16492,11 +16936,13 @@ Module.asmLibraryArg = {
  "nullFunc_iiiifii": nullFunc_iiiifii,
  "nullFunc_f": nullFunc_f,
  "nullFunc_vffff": nullFunc_vffff,
+ "nullFunc_viiiifiiiiif": nullFunc_viiiifiiiiif,
  "nullFunc_viififi": nullFunc_viififi,
  "nullFunc_viii": nullFunc_viii,
  "nullFunc_iiidii": nullFunc_iiidii,
  "nullFunc_viif": nullFunc_viif,
  "nullFunc_fiiifi": nullFunc_fiiifi,
+ "nullFunc_iiiifi": nullFunc_iiiifi,
  "nullFunc_vd": nullFunc_vd,
  "nullFunc_fiifi": nullFunc_fiifi,
  "nullFunc_vi": nullFunc_vi,
@@ -16505,67 +16951,85 @@ Module.asmLibraryArg = {
  "nullFunc_ii": nullFunc_ii,
  "nullFunc_vifffi": nullFunc_vifffi,
  "nullFunc_viifi": nullFunc_viifi,
+ "nullFunc_iiiiifiiiiii": nullFunc_iiiiifiiiiii,
+ "nullFunc_iiiiifiiiiif": nullFunc_iiiiifiiiiif,
  "nullFunc_viiff": nullFunc_viiff,
  "nullFunc_iifi": nullFunc_iifi,
  "nullFunc_vidii": nullFunc_vidii,
+ "nullFunc_viiif": nullFunc_viiif,
  "nullFunc_fifffi": nullFunc_fifffi,
+ "nullFunc_vifiiiiiiiiiiiiiiiiiiiiiii": nullFunc_vifiiiiiiiiiiiiiiiiiiiiiii,
+ "nullFunc_iiiffii": nullFunc_iiiffii,
  "nullFunc_iiifi": nullFunc_iiifi,
  "nullFunc_iiii": nullFunc_iiii,
  "nullFunc_fidi": nullFunc_fidi,
  "nullFunc_viifff": nullFunc_viifff,
- "nullFunc_viiffiii": nullFunc_viiffiii,
+ "nullFunc_viiffi": nullFunc_viiffi,
  "nullFunc_iiid": nullFunc_iiid,
  "nullFunc_iiif": nullFunc_iiif,
  "nullFunc_diiiii": nullFunc_diiiii,
  "nullFunc_viiifi": nullFunc_viiifi,
  "nullFunc_fiiffi": nullFunc_fiiffi,
  "nullFunc_iiiiiiiiiiiii": nullFunc_iiiiiiiiiiiii,
+ "nullFunc_iiiifiii": nullFunc_iiiifiii,
  "nullFunc_ff": nullFunc_ff,
  "nullFunc_iidii": nullFunc_iidii,
- "nullFunc_fi": nullFunc_fi,
+ "nullFunc_iiiifiiiii": nullFunc_iiiifiiiii,
  "nullFunc_iiiiiiiiiiiiiii": nullFunc_iiiiiiiiiiiiiii,
  "nullFunc_viiffffiii": nullFunc_viiffffiii,
  "nullFunc_vfi": nullFunc_vfi,
  "nullFunc_i": nullFunc_i,
  "nullFunc_vff": nullFunc_vff,
+ "nullFunc_viiifiiiii": nullFunc_viiifiiiii,
+ "nullFunc_vidi": nullFunc_vidi,
  "nullFunc_iiiiiiiii": nullFunc_iiiiiiiii,
  "nullFunc_viffffi": nullFunc_viffffi,
  "invoke_diddi": invoke_diddi,
+ "invoke_fiff": invoke_fiff,
  "invoke_fifi": invoke_fifi,
  "invoke_iiiiiii": invoke_iiiiiii,
  "invoke_viiiiiiiiiii": invoke_viiiiiiiiiii,
  "invoke_fff": invoke_fff,
  "invoke_iidi": invoke_iidi,
- "invoke_vidi": invoke_vidi,
+ "invoke_fiiiiiifiiiiiif": invoke_fiiiiiifiiiiiif,
+ "invoke_iiiiifiif": invoke_iiiiifiif,
+ "invoke_iiiiifii": invoke_iiiiifii,
+ "invoke_iiiiifiii": invoke_iiiiifiii,
  "invoke_iiffi": invoke_iiffi,
  "invoke_iiiiiiiiiiii": invoke_iiiiiiiiiiii,
  "invoke_iidiii": invoke_iidiii,
  "invoke_fif": invoke_fif,
  "invoke_viiiiiiiiiiiiiii": invoke_viiiiiiiiiiiiiii,
+ "invoke_viiiiif": invoke_viiiiif,
  "invoke_fii": invoke_fii,
  "invoke_di": invoke_di,
+ "invoke_viff": invoke_viff,
  "invoke_iiifiii": invoke_iiifiii,
  "invoke_viffff": invoke_viffff,
+ "invoke_viiffiii": invoke_viiffiii,
  "invoke_dii": invoke_dii,
  "invoke_iifii": invoke_iifii,
  "invoke_didi": invoke_didi,
  "invoke_iiiiiiiiii": invoke_iiiiiiiiii,
  "invoke_vdddddd": invoke_vdddddd,
+ "invoke_iiiiiiiiiiiiffffii": invoke_iiiiiiiiiiiiffffii,
  "invoke_vdd": invoke_vdd,
  "invoke_iiiiiiii": invoke_iiiiiiii,
  "invoke_viiiififii": invoke_viiiififii,
  "invoke_viifii": invoke_viifii,
+ "invoke_vifiiiiiiiiiiiii": invoke_vifiiiiiiiiiiiii,
+ "invoke_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii": invoke_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii,
  "invoke_iiiiiiif": invoke_iiiiiiif,
- "invoke_iiififiiii": invoke_iiififiiii,
+ "invoke_viidi": invoke_viidi,
  "invoke_iiiii": invoke_iiiii,
  "invoke_viffffiii": invoke_viffffiii,
  "invoke_fiffi": invoke_fiffi,
  "invoke_iiifii": invoke_iiifii,
  "invoke_viiiiiiiiiiiiiiiii": invoke_viiiiiiiiiiiiiiiii,
  "invoke_iiiiiiiiiiiiii": invoke_iiiiiiiiiiiiii,
- "invoke_viiiiif": invoke_viiiiif,
+ "invoke_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii": invoke_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii,
  "invoke_viffi": invoke_viffi,
- "invoke_viff": invoke_viff,
+ "invoke_iiiifiiii": invoke_iiiifiiii,
  "invoke_vifi": invoke_vifi,
  "invoke_vifff": invoke_vifff,
  "invoke_viiiiii": invoke_viiiiii,
@@ -16573,15 +17037,19 @@ Module.asmLibraryArg = {
  "invoke_viiiiiiiiiiiiii": invoke_viiiiiiiiiiiiii,
  "invoke_fiii": invoke_fiii,
  "invoke_iiiiiifffiiifii": invoke_iiiiiifffiiifii,
+ "invoke_iifff": invoke_iifff,
  "invoke_iifiii": invoke_iifiii,
  "invoke_fiif": invoke_fiif,
  "invoke_v": invoke_v,
+ "invoke_iiiiifiiiif": invoke_iiiiifiiiif,
  "invoke_iiddi": invoke_iiddi,
  "invoke_viiiiiiiiii": invoke_viiiiiiiiii,
  "invoke_diii": invoke_diii,
  "invoke_fiiii": invoke_fiiii,
  "invoke_iiiiii": invoke_iiiiii,
+ "invoke_viiiiiiffii": invoke_viiiiiiffii,
  "invoke_viidii": invoke_viidii,
+ "invoke_iiiiiifiif": invoke_iiiiiifiif,
  "invoke_viiii": invoke_viiii,
  "invoke_viiiii": invoke_viiiii,
  "invoke_vif": invoke_vif,
@@ -16589,14 +17057,21 @@ Module.asmLibraryArg = {
  "invoke_iiidi": invoke_iiidi,
  "invoke_vii": invoke_vii,
  "invoke_difi": invoke_difi,
- "invoke_viidi": invoke_viidi,
+ "invoke_fi": invoke_fi,
+ "invoke_iiififiiii": invoke_iiififiiii,
  "invoke_vf": invoke_vf,
- "invoke_viiiiiiffii": invoke_viiiiiiffii,
+ "invoke_fiiiiiiiifiiiif": invoke_fiiiiiiiifiiiif,
  "invoke_viffffii": invoke_viffffii,
+ "invoke_vifiii": invoke_vifiii,
  "invoke_diiii": invoke_diiii,
  "invoke_viiiiiiiiiiiii": invoke_viiiiiiiiiiiii,
+ "invoke_iiiiiiiiiiffffii": invoke_iiiiiiiiiiffffii,
+ "invoke_iiiiifi": invoke_iiiiifi,
  "invoke_viiiiiiii": invoke_viiiiiiii,
+ "invoke_iif": invoke_iif,
+ "invoke_vifiiii": invoke_vifiiii,
  "invoke_viiiiiii": invoke_viiiiiii,
+ "invoke_vifiiiiiiiiiiiiiiiiii": invoke_vifiiiiiiiiiiiiiiiiii,
  "invoke_viiiiiiiii": invoke_viiiiiiiii,
  "invoke_viiiiiif": invoke_viiiiiif,
  "invoke_iii": invoke_iii,
@@ -16604,11 +17079,13 @@ Module.asmLibraryArg = {
  "invoke_iiiifii": invoke_iiiifii,
  "invoke_f": invoke_f,
  "invoke_vffff": invoke_vffff,
+ "invoke_viiiifiiiiif": invoke_viiiifiiiiif,
  "invoke_viififi": invoke_viififi,
  "invoke_viii": invoke_viii,
  "invoke_iiidii": invoke_iiidii,
  "invoke_viif": invoke_viif,
  "invoke_fiiifi": invoke_fiiifi,
+ "invoke_iiiifi": invoke_iiiifi,
  "invoke_vd": invoke_vd,
  "invoke_fiifi": invoke_fiifi,
  "invoke_vi": invoke_vi,
@@ -16617,29 +17094,37 @@ Module.asmLibraryArg = {
  "invoke_ii": invoke_ii,
  "invoke_vifffi": invoke_vifffi,
  "invoke_viifi": invoke_viifi,
+ "invoke_iiiiifiiiiii": invoke_iiiiifiiiiii,
+ "invoke_iiiiifiiiiif": invoke_iiiiifiiiiif,
  "invoke_viiff": invoke_viiff,
  "invoke_iifi": invoke_iifi,
  "invoke_vidii": invoke_vidii,
+ "invoke_viiif": invoke_viiif,
  "invoke_fifffi": invoke_fifffi,
+ "invoke_vifiiiiiiiiiiiiiiiiiiiiiii": invoke_vifiiiiiiiiiiiiiiiiiiiiiii,
+ "invoke_iiiffii": invoke_iiiffii,
  "invoke_iiifi": invoke_iiifi,
  "invoke_iiii": invoke_iiii,
  "invoke_fidi": invoke_fidi,
  "invoke_viifff": invoke_viifff,
- "invoke_viiffiii": invoke_viiffiii,
+ "invoke_viiffi": invoke_viiffi,
  "invoke_iiid": invoke_iiid,
  "invoke_iiif": invoke_iiif,
  "invoke_diiiii": invoke_diiiii,
  "invoke_viiifi": invoke_viiifi,
  "invoke_fiiffi": invoke_fiiffi,
  "invoke_iiiiiiiiiiiii": invoke_iiiiiiiiiiiii,
+ "invoke_iiiifiii": invoke_iiiifiii,
  "invoke_ff": invoke_ff,
  "invoke_iidii": invoke_iidii,
- "invoke_fi": invoke_fi,
+ "invoke_iiiifiiiii": invoke_iiiifiiiii,
  "invoke_iiiiiiiiiiiiiii": invoke_iiiiiiiiiiiiiii,
  "invoke_viiffffiii": invoke_viiffffiii,
  "invoke_vfi": invoke_vfi,
  "invoke_i": invoke_i,
  "invoke_vff": invoke_vff,
+ "invoke_viiifiiiii": invoke_viiifiiiii,
+ "invoke_vidi": invoke_vidi,
  "invoke_iiiiiiiii": invoke_iiiiiiiii,
  "invoke_viffffi": invoke_viffffi,
  "_emscripten_glGetTexParameterfv": _emscripten_glGetTexParameterfv,
@@ -16681,6 +17166,7 @@ Module.asmLibraryArg = {
  "___syscall146": ___syscall146,
  "_glUniform1uiv": _glUniform1uiv,
  "_emscripten_glAttachShader": _emscripten_glAttachShader,
+ "_emscripten_get_now_is_monotonic": _emscripten_get_now_is_monotonic,
  "_QueryAudioInput": _QueryAudioInput,
  "_pthread_cond_timedwait": _pthread_cond_timedwait,
  "_emscripten_glTexParameterfv": _emscripten_glTexParameterfv,
@@ -16713,6 +17199,7 @@ Module.asmLibraryArg = {
  "_glCullFace": _glCullFace,
  "_JS_Video_Pause": _JS_Video_Pause,
  "_emscripten_get_gamepad_status": _emscripten_get_gamepad_status,
+ "_sched_yield": _sched_yield,
  "_inet_addr": _inet_addr,
  "_glCompressedTexImage2D": _glCompressedTexImage2D,
  "_emscripten_glUniform1iv": _emscripten_glUniform1iv,
@@ -16932,7 +17419,7 @@ Module.asmLibraryArg = {
  "_emscripten_glUseProgram": _emscripten_glUseProgram,
  "__setLetterbox": __setLetterbox,
  "_glCreateProgram": _glCreateProgram,
- "__addDays": __addDays,
+ "_clock_gettime": _clock_gettime,
  "_emscripten_set_touchmove_callback": _emscripten_set_touchmove_callback,
  "_glGetAttribLocation": _glGetAttribLocation,
  "_Mix_PlayChannel": _Mix_PlayChannel,
@@ -16957,7 +17444,7 @@ Module.asmLibraryArg = {
  "_glPixelStorei": _glPixelStorei,
  "_emscripten_glIsBuffer": _emscripten_glIsBuffer,
  "_emscripten_glVertexAttrib1f": _emscripten_glVertexAttrib1f,
- "_glVertexAttribPointer": _glVertexAttribPointer,
+ "_emscripten_set_keyup_callback": _emscripten_set_keyup_callback,
  "_emscripten_glCompressedTexSubImage2D": _emscripten_glCompressedTexSubImage2D,
  "_glSamplerParameteri": _glSamplerParameteri,
  "_glBindSampler": _glBindSampler,
@@ -17090,6 +17577,7 @@ Module.asmLibraryArg = {
  "___cxa_begin_catch": ___cxa_begin_catch,
  "_emscripten_glGetProgramiv": _emscripten_glGetProgramiv,
  "_glDeleteSync": _glDeleteSync,
+ "__addDays": __addDays,
  "_emscripten_glGetShaderSource": _emscripten_glGetShaderSource,
  "emscriptenWebGLValidateMapBufferTarget": emscriptenWebGLValidateMapBufferTarget,
  "_emscripten_glTexImage2D": _emscripten_glTexImage2D,
@@ -17146,7 +17634,6 @@ Module.asmLibraryArg = {
  "_emscripten_glBindRenderbuffer": _emscripten_glBindRenderbuffer,
  "_time": _time,
  "_emscripten_glGetFramebufferAttachmentParameteriv": _emscripten_glGetFramebufferAttachmentParameteriv,
- "_emscripten_set_wheel_callback": _emscripten_set_wheel_callback,
  "_exit": _exit,
  "_emscripten_glGetActiveAttrib": _emscripten_glGetActiveAttrib,
  "__inet_pton4_raw": __inet_pton4_raw,
@@ -17181,6 +17668,7 @@ Module.asmLibraryArg = {
  "_emscripten_glTexSubImage2D": _emscripten_glTexSubImage2D,
  "_pthread_mutex_destroy": _pthread_mutex_destroy,
  "_emscripten_glColorPointer": _emscripten_glColorPointer,
+ "_glVertexAttribPointer": _glVertexAttribPointer,
  "_glTransformFeedbackVaryings": _glTransformFeedbackVaryings,
  "_glGetShaderSource": _glGetShaderSource,
  "_emscripten_glViewport": _emscripten_glViewport,
@@ -17218,7 +17706,7 @@ Module.asmLibraryArg = {
  "_SDL_UpperBlit": _SDL_UpperBlit,
  "___syscall51": ___syscall51,
  "_emscripten_glActiveTexture": _emscripten_glActiveTexture,
- "_emscripten_set_keyup_callback": _emscripten_set_keyup_callback,
+ "_emscripten_set_wheel_callback": _emscripten_set_wheel_callback,
  "_emscripten_glDeleteVertexArrays": _emscripten_glDeleteVertexArrays,
  "___syscall54": ___syscall54,
  "_glDeleteTransformFeedbacks": _glDeleteTransformFeedbacks,
@@ -17707,12 +18195,6 @@ asm["__GLOBAL__sub_I_modules_spriteshape_private_0_cpp"] = (function() {
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_modules_spriteshape_private_0_cpp.apply(null, arguments);
 });
-var real___GLOBAL__sub_I_Interlocked_cpp = asm["__GLOBAL__sub_I_Interlocked_cpp"];
-asm["__GLOBAL__sub_I_Interlocked_cpp"] = (function() {
- assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
- assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
- return real___GLOBAL__sub_I_Interlocked_cpp.apply(null, arguments);
-});
 var real___GLOBAL__sub_I_runtime_graphics_lod_0_cpp = asm["__GLOBAL__sub_I_runtime_graphics_lod_0_cpp"];
 asm["__GLOBAL__sub_I_runtime_graphics_lod_0_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
@@ -17856,6 +18338,12 @@ asm["__GLOBAL__sub_I_runtime_transform_0_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_runtime_transform_0_cpp.apply(null, arguments);
+});
+var real___GLOBAL__sub_I_Thread_cpp_10675 = asm["__GLOBAL__sub_I_Thread_cpp_10675"];
+asm["__GLOBAL__sub_I_Thread_cpp_10675"] = (function() {
+ assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
+ assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
+ return real___GLOBAL__sub_I_Thread_cpp_10675.apply(null, arguments);
 });
 var real___GLOBAL__sub_I_runtime_allocator_2_cpp = asm["__GLOBAL__sub_I_runtime_allocator_2_cpp"];
 asm["__GLOBAL__sub_I_runtime_allocator_2_cpp"] = (function() {
@@ -18031,12 +18519,6 @@ asm["__GLOBAL__sub_I_runtime_gfxdevice_2_cpp"] = (function() {
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_runtime_gfxdevice_2_cpp.apply(null, arguments);
 });
-var real___GLOBAL__sub_I_Runtime_cpp_32999 = asm["__GLOBAL__sub_I_Runtime_cpp_32999"];
-asm["__GLOBAL__sub_I_Runtime_cpp_32999"] = (function() {
- assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
- assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
- return real___GLOBAL__sub_I_Runtime_cpp_32999.apply(null, arguments);
-});
 var real__SendMessageFloat = asm["_SendMessageFloat"];
 asm["_SendMessageFloat"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
@@ -18139,17 +18621,23 @@ asm["__GLOBAL__sub_I_StackTrace_cpp"] = (function() {
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_StackTrace_cpp.apply(null, arguments);
 });
+var real___GLOBAL__sub_I_Assembly_cpp_11299 = asm["__GLOBAL__sub_I_Assembly_cpp_11299"];
+asm["__GLOBAL__sub_I_Assembly_cpp_11299"] = (function() {
+ assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
+ assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
+ return real___GLOBAL__sub_I_Assembly_cpp_11299.apply(null, arguments);
+});
 var real___GLOBAL__sub_I_runtime_utilities_0_cpp = asm["__GLOBAL__sub_I_runtime_utilities_0_cpp"];
 asm["__GLOBAL__sub_I_runtime_utilities_0_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_runtime_utilities_0_cpp.apply(null, arguments);
 });
-var real___GLOBAL__sub_I_Thread_cpp_31815 = asm["__GLOBAL__sub_I_Thread_cpp_31815"];
-asm["__GLOBAL__sub_I_Thread_cpp_31815"] = (function() {
+var real___GLOBAL__sub_I_Interlocked_cpp = asm["__GLOBAL__sub_I_Interlocked_cpp"];
+asm["__GLOBAL__sub_I_Interlocked_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
- return real___GLOBAL__sub_I_Thread_cpp_31815.apply(null, arguments);
+ return real___GLOBAL__sub_I_Interlocked_cpp.apply(null, arguments);
 });
 var real__i64Subtract = asm["_i64Subtract"];
 asm["_i64Subtract"] = (function() {
@@ -18667,6 +19155,12 @@ asm["__GLOBAL__sub_I_runtime_utilities_4_cpp"] = (function() {
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_runtime_utilities_4_cpp.apply(null, arguments);
 });
+var real___GLOBAL__sub_I_Runtime_cpp_11859 = asm["__GLOBAL__sub_I_Runtime_cpp_11859"];
+asm["__GLOBAL__sub_I_Runtime_cpp_11859"] = (function() {
+ assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
+ assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
+ return real___GLOBAL__sub_I_Runtime_cpp_11859.apply(null, arguments);
+});
 var real___GLOBAL__sub_I_runtime_vr_0_cpp = asm["__GLOBAL__sub_I_runtime_vr_0_cpp"];
 asm["__GLOBAL__sub_I_runtime_vr_0_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
@@ -18690,12 +19184,6 @@ asm["__GLOBAL__sub_I_SparseTextureGLES_cpp"] = (function() {
  assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
  assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
  return real___GLOBAL__sub_I_SparseTextureGLES_cpp.apply(null, arguments);
-});
-var real___GLOBAL__sub_I_Assembly_cpp_32440 = asm["__GLOBAL__sub_I_Assembly_cpp_32440"];
-asm["__GLOBAL__sub_I_Assembly_cpp_32440"] = (function() {
- assert(runtimeInitialized, "you need to wait for the runtime to be ready (e.g. wait for main() to be called)");
- assert(!runtimeExited, "the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)");
- return real___GLOBAL__sub_I_Assembly_cpp_32440.apply(null, arguments);
 });
 var real___GLOBAL__sub_I_runtime_mono_1_cpp = asm["__GLOBAL__sub_I_runtime_mono_1_cpp"];
 asm["__GLOBAL__sub_I_runtime_mono_1_cpp"] = (function() {
@@ -18795,7 +19283,6 @@ var __GLOBAL__sub_I_runtime_dynamics_1_cpp = Module["__GLOBAL__sub_I_runtime_dyn
 var ___cxx_global_var_init_133 = Module["___cxx_global_var_init_133"] = asm["___cxx_global_var_init_133"];
 var __GLOBAL__sub_I_ParticleSystemGeometryJob_cpp = Module["__GLOBAL__sub_I_ParticleSystemGeometryJob_cpp"] = asm["__GLOBAL__sub_I_ParticleSystemGeometryJob_cpp"];
 var __GLOBAL__sub_I_modules_spriteshape_private_0_cpp = Module["__GLOBAL__sub_I_modules_spriteshape_private_0_cpp"] = asm["__GLOBAL__sub_I_modules_spriteshape_private_0_cpp"];
-var __GLOBAL__sub_I_Interlocked_cpp = Module["__GLOBAL__sub_I_Interlocked_cpp"] = asm["__GLOBAL__sub_I_Interlocked_cpp"];
 var __GLOBAL__sub_I_runtime_graphics_lod_0_cpp = Module["__GLOBAL__sub_I_runtime_graphics_lod_0_cpp"] = asm["__GLOBAL__sub_I_runtime_graphics_lod_0_cpp"];
 var __GLOBAL__sub_I_Assembly_cpp = Module["__GLOBAL__sub_I_Assembly_cpp"] = asm["__GLOBAL__sub_I_Assembly_cpp"];
 var __GLOBAL__sub_I_runtime_serialize_0_cpp = Module["__GLOBAL__sub_I_runtime_serialize_0_cpp"] = asm["__GLOBAL__sub_I_runtime_serialize_0_cpp"];
@@ -18820,6 +19307,7 @@ var __GLOBAL__sub_I_runtime_dynamics_0_cpp = Module["__GLOBAL__sub_I_runtime_dyn
 var __GLOBAL__sub_I_runtime_camera_6_cpp = Module["__GLOBAL__sub_I_runtime_camera_6_cpp"] = asm["__GLOBAL__sub_I_runtime_camera_6_cpp"];
 var _ntohs = Module["_ntohs"] = asm["_ntohs"];
 var __GLOBAL__sub_I_runtime_transform_0_cpp = Module["__GLOBAL__sub_I_runtime_transform_0_cpp"] = asm["__GLOBAL__sub_I_runtime_transform_0_cpp"];
+var __GLOBAL__sub_I_Thread_cpp_10675 = Module["__GLOBAL__sub_I_Thread_cpp_10675"] = asm["__GLOBAL__sub_I_Thread_cpp_10675"];
 var __GLOBAL__sub_I_runtime_allocator_2_cpp = Module["__GLOBAL__sub_I_runtime_allocator_2_cpp"] = asm["__GLOBAL__sub_I_runtime_allocator_2_cpp"];
 var __GLOBAL__sub_I_modules_terrain_public_1_cpp = Module["__GLOBAL__sub_I_modules_terrain_public_1_cpp"] = asm["__GLOBAL__sub_I_modules_terrain_public_1_cpp"];
 var __GLOBAL__sub_I_MemoryMappedFile_cpp = Module["__GLOBAL__sub_I_MemoryMappedFile_cpp"] = asm["__GLOBAL__sub_I_MemoryMappedFile_cpp"];
@@ -18849,7 +19337,6 @@ var __GLOBAL__sub_I_runtime_dynamics_3_cpp = Module["__GLOBAL__sub_I_runtime_dyn
 var __GLOBAL__sub_I_TrailRenderer_cpp = Module["__GLOBAL__sub_I_TrailRenderer_cpp"] = asm["__GLOBAL__sub_I_TrailRenderer_cpp"];
 var __GLOBAL__sub_I_runtime_graphics_7_cpp = Module["__GLOBAL__sub_I_runtime_graphics_7_cpp"] = asm["__GLOBAL__sub_I_runtime_graphics_7_cpp"];
 var __GLOBAL__sub_I_runtime_gfxdevice_2_cpp = Module["__GLOBAL__sub_I_runtime_gfxdevice_2_cpp"] = asm["__GLOBAL__sub_I_runtime_gfxdevice_2_cpp"];
-var __GLOBAL__sub_I_Runtime_cpp_32999 = Module["__GLOBAL__sub_I_Runtime_cpp_32999"] = asm["__GLOBAL__sub_I_Runtime_cpp_32999"];
 var _SendMessageFloat = Module["_SendMessageFloat"] = asm["_SendMessageFloat"];
 var __GLOBAL__sub_I_runtime_allocator_1_cpp = Module["__GLOBAL__sub_I_runtime_allocator_1_cpp"] = asm["__GLOBAL__sub_I_runtime_allocator_1_cpp"];
 var __GLOBAL__sub_I_runtime_graphics_1_cpp = Module["__GLOBAL__sub_I_runtime_graphics_1_cpp"] = asm["__GLOBAL__sub_I_runtime_graphics_1_cpp"];
@@ -18868,8 +19355,9 @@ var _memset = Module["_memset"] = asm["_memset"];
 var __GLOBAL__sub_I_modules_physics2d_public_1_cpp = Module["__GLOBAL__sub_I_modules_physics2d_public_1_cpp"] = asm["__GLOBAL__sub_I_modules_physics2d_public_1_cpp"];
 var __GLOBAL__sub_I_runtime_baseclasses_1_cpp = Module["__GLOBAL__sub_I_runtime_baseclasses_1_cpp"] = asm["__GLOBAL__sub_I_runtime_baseclasses_1_cpp"];
 var __GLOBAL__sub_I_StackTrace_cpp = Module["__GLOBAL__sub_I_StackTrace_cpp"] = asm["__GLOBAL__sub_I_StackTrace_cpp"];
+var __GLOBAL__sub_I_Assembly_cpp_11299 = Module["__GLOBAL__sub_I_Assembly_cpp_11299"] = asm["__GLOBAL__sub_I_Assembly_cpp_11299"];
 var __GLOBAL__sub_I_runtime_utilities_0_cpp = Module["__GLOBAL__sub_I_runtime_utilities_0_cpp"] = asm["__GLOBAL__sub_I_runtime_utilities_0_cpp"];
-var __GLOBAL__sub_I_Thread_cpp_31815 = Module["__GLOBAL__sub_I_Thread_cpp_31815"] = asm["__GLOBAL__sub_I_Thread_cpp_31815"];
+var __GLOBAL__sub_I_Interlocked_cpp = Module["__GLOBAL__sub_I_Interlocked_cpp"] = asm["__GLOBAL__sub_I_Interlocked_cpp"];
 var _i64Subtract = Module["_i64Subtract"] = asm["_i64Subtract"];
 var __GLOBAL__sub_I_runtime_profiler_0_cpp = Module["__GLOBAL__sub_I_runtime_profiler_0_cpp"] = asm["__GLOBAL__sub_I_runtime_profiler_0_cpp"];
 var __GLOBAL__sub_I_runtime_ai_internal_builder_0_cpp = Module["__GLOBAL__sub_I_runtime_ai_internal_builder_0_cpp"] = asm["__GLOBAL__sub_I_runtime_ai_internal_builder_0_cpp"];
@@ -18956,50 +19444,60 @@ var __GLOBAL__sub_I_platformdependent_webgl_source_1_cpp = Module["__GLOBAL__sub
 var __GLOBAL__sub_I_runtime_graphics_billboard_0_cpp = Module["__GLOBAL__sub_I_runtime_graphics_billboard_0_cpp"] = asm["__GLOBAL__sub_I_runtime_graphics_billboard_0_cpp"];
 var __GLOBAL__sub_I_runtime_input_0_cpp = Module["__GLOBAL__sub_I_runtime_input_0_cpp"] = asm["__GLOBAL__sub_I_runtime_input_0_cpp"];
 var __GLOBAL__sub_I_runtime_utilities_4_cpp = Module["__GLOBAL__sub_I_runtime_utilities_4_cpp"] = asm["__GLOBAL__sub_I_runtime_utilities_4_cpp"];
+var __GLOBAL__sub_I_Runtime_cpp_11859 = Module["__GLOBAL__sub_I_Runtime_cpp_11859"] = asm["__GLOBAL__sub_I_Runtime_cpp_11859"];
 var __GLOBAL__sub_I_runtime_vr_0_cpp = Module["__GLOBAL__sub_I_runtime_vr_0_cpp"] = asm["__GLOBAL__sub_I_runtime_vr_0_cpp"];
 var __GLOBAL__sub_I_runtime_scripting_1_cpp = Module["__GLOBAL__sub_I_runtime_scripting_1_cpp"] = asm["__GLOBAL__sub_I_runtime_scripting_1_cpp"];
 var __GLOBAL__sub_I_runtime_imgui_0_cpp = Module["__GLOBAL__sub_I_runtime_imgui_0_cpp"] = asm["__GLOBAL__sub_I_runtime_imgui_0_cpp"];
 var __GLOBAL__sub_I_SparseTextureGLES_cpp = Module["__GLOBAL__sub_I_SparseTextureGLES_cpp"] = asm["__GLOBAL__sub_I_SparseTextureGLES_cpp"];
-var __GLOBAL__sub_I_Assembly_cpp_32440 = Module["__GLOBAL__sub_I_Assembly_cpp_32440"] = asm["__GLOBAL__sub_I_Assembly_cpp_32440"];
 var __GLOBAL__sub_I_runtime_mono_1_cpp = Module["__GLOBAL__sub_I_runtime_mono_1_cpp"] = asm["__GLOBAL__sub_I_runtime_mono_1_cpp"];
 var __GLOBAL__sub_I_ArrayMetadata_cpp = Module["__GLOBAL__sub_I_ArrayMetadata_cpp"] = asm["__GLOBAL__sub_I_ArrayMetadata_cpp"];
 var __GLOBAL__sub_I_runtime_graphics_mesh_3_cpp = Module["__GLOBAL__sub_I_runtime_graphics_mesh_3_cpp"] = asm["__GLOBAL__sub_I_runtime_graphics_mesh_3_cpp"];
 var dynCall_diddi = Module["dynCall_diddi"] = asm["dynCall_diddi"];
+var dynCall_fiff = Module["dynCall_fiff"] = asm["dynCall_fiff"];
 var dynCall_fifi = Module["dynCall_fifi"] = asm["dynCall_fifi"];
 var dynCall_iiiiiii = Module["dynCall_iiiiiii"] = asm["dynCall_iiiiiii"];
 var dynCall_viiiiiiiiiii = Module["dynCall_viiiiiiiiiii"] = asm["dynCall_viiiiiiiiiii"];
 var dynCall_fff = Module["dynCall_fff"] = asm["dynCall_fff"];
 var dynCall_iidi = Module["dynCall_iidi"] = asm["dynCall_iidi"];
-var dynCall_vidi = Module["dynCall_vidi"] = asm["dynCall_vidi"];
+var dynCall_fiiiiiifiiiiiif = Module["dynCall_fiiiiiifiiiiiif"] = asm["dynCall_fiiiiiifiiiiiif"];
+var dynCall_iiiiifiif = Module["dynCall_iiiiifiif"] = asm["dynCall_iiiiifiif"];
+var dynCall_iiiiifii = Module["dynCall_iiiiifii"] = asm["dynCall_iiiiifii"];
+var dynCall_iiiiifiii = Module["dynCall_iiiiifiii"] = asm["dynCall_iiiiifiii"];
 var dynCall_iiffi = Module["dynCall_iiffi"] = asm["dynCall_iiffi"];
 var dynCall_iiiiiiiiiiii = Module["dynCall_iiiiiiiiiiii"] = asm["dynCall_iiiiiiiiiiii"];
 var dynCall_iidiii = Module["dynCall_iidiii"] = asm["dynCall_iidiii"];
 var dynCall_fif = Module["dynCall_fif"] = asm["dynCall_fif"];
 var dynCall_viiiiiiiiiiiiiii = Module["dynCall_viiiiiiiiiiiiiii"] = asm["dynCall_viiiiiiiiiiiiiii"];
+var dynCall_viiiiif = Module["dynCall_viiiiif"] = asm["dynCall_viiiiif"];
 var dynCall_fii = Module["dynCall_fii"] = asm["dynCall_fii"];
 var dynCall_di = Module["dynCall_di"] = asm["dynCall_di"];
+var dynCall_viff = Module["dynCall_viff"] = asm["dynCall_viff"];
 var dynCall_iiifiii = Module["dynCall_iiifiii"] = asm["dynCall_iiifiii"];
 var dynCall_viffff = Module["dynCall_viffff"] = asm["dynCall_viffff"];
+var dynCall_viiffiii = Module["dynCall_viiffiii"] = asm["dynCall_viiffiii"];
 var dynCall_dii = Module["dynCall_dii"] = asm["dynCall_dii"];
 var dynCall_iifii = Module["dynCall_iifii"] = asm["dynCall_iifii"];
 var dynCall_didi = Module["dynCall_didi"] = asm["dynCall_didi"];
 var dynCall_iiiiiiiiii = Module["dynCall_iiiiiiiiii"] = asm["dynCall_iiiiiiiiii"];
 var dynCall_vdddddd = Module["dynCall_vdddddd"] = asm["dynCall_vdddddd"];
+var dynCall_iiiiiiiiiiiiffffii = Module["dynCall_iiiiiiiiiiiiffffii"] = asm["dynCall_iiiiiiiiiiiiffffii"];
 var dynCall_vdd = Module["dynCall_vdd"] = asm["dynCall_vdd"];
 var dynCall_iiiiiiii = Module["dynCall_iiiiiiii"] = asm["dynCall_iiiiiiii"];
 var dynCall_viiiififii = Module["dynCall_viiiififii"] = asm["dynCall_viiiififii"];
 var dynCall_viifii = Module["dynCall_viifii"] = asm["dynCall_viifii"];
+var dynCall_vifiiiiiiiiiiiii = Module["dynCall_vifiiiiiiiiiiiii"] = asm["dynCall_vifiiiiiiiiiiiii"];
+var dynCall_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii = Module["dynCall_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"] = asm["dynCall_viiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"];
 var dynCall_iiiiiiif = Module["dynCall_iiiiiiif"] = asm["dynCall_iiiiiiif"];
-var dynCall_iiififiiii = Module["dynCall_iiififiiii"] = asm["dynCall_iiififiiii"];
+var dynCall_viidi = Module["dynCall_viidi"] = asm["dynCall_viidi"];
 var dynCall_iiiii = Module["dynCall_iiiii"] = asm["dynCall_iiiii"];
 var dynCall_viffffiii = Module["dynCall_viffffiii"] = asm["dynCall_viffffiii"];
 var dynCall_fiffi = Module["dynCall_fiffi"] = asm["dynCall_fiffi"];
 var dynCall_iiifii = Module["dynCall_iiifii"] = asm["dynCall_iiifii"];
 var dynCall_viiiiiiiiiiiiiiiii = Module["dynCall_viiiiiiiiiiiiiiiii"] = asm["dynCall_viiiiiiiiiiiiiiiii"];
 var dynCall_iiiiiiiiiiiiii = Module["dynCall_iiiiiiiiiiiiii"] = asm["dynCall_iiiiiiiiiiiiii"];
-var dynCall_viiiiif = Module["dynCall_viiiiif"] = asm["dynCall_viiiiif"];
+var dynCall_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii = Module["dynCall_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii"] = asm["dynCall_vifiiiiiiiiiiiiiiiiiiiiiiiiiiii"];
 var dynCall_viffi = Module["dynCall_viffi"] = asm["dynCall_viffi"];
-var dynCall_viff = Module["dynCall_viff"] = asm["dynCall_viff"];
+var dynCall_iiiifiiii = Module["dynCall_iiiifiiii"] = asm["dynCall_iiiifiiii"];
 var dynCall_vifi = Module["dynCall_vifi"] = asm["dynCall_vifi"];
 var dynCall_vifff = Module["dynCall_vifff"] = asm["dynCall_vifff"];
 var dynCall_viiiiii = Module["dynCall_viiiiii"] = asm["dynCall_viiiiii"];
@@ -19007,15 +19505,19 @@ var dynCall_viififiii = Module["dynCall_viififiii"] = asm["dynCall_viififiii"];
 var dynCall_viiiiiiiiiiiiii = Module["dynCall_viiiiiiiiiiiiii"] = asm["dynCall_viiiiiiiiiiiiii"];
 var dynCall_fiii = Module["dynCall_fiii"] = asm["dynCall_fiii"];
 var dynCall_iiiiiifffiiifii = Module["dynCall_iiiiiifffiiifii"] = asm["dynCall_iiiiiifffiiifii"];
+var dynCall_iifff = Module["dynCall_iifff"] = asm["dynCall_iifff"];
 var dynCall_iifiii = Module["dynCall_iifiii"] = asm["dynCall_iifiii"];
 var dynCall_fiif = Module["dynCall_fiif"] = asm["dynCall_fiif"];
 var dynCall_v = Module["dynCall_v"] = asm["dynCall_v"];
+var dynCall_iiiiifiiiif = Module["dynCall_iiiiifiiiif"] = asm["dynCall_iiiiifiiiif"];
 var dynCall_iiddi = Module["dynCall_iiddi"] = asm["dynCall_iiddi"];
 var dynCall_viiiiiiiiii = Module["dynCall_viiiiiiiiii"] = asm["dynCall_viiiiiiiiii"];
 var dynCall_diii = Module["dynCall_diii"] = asm["dynCall_diii"];
 var dynCall_fiiii = Module["dynCall_fiiii"] = asm["dynCall_fiiii"];
 var dynCall_iiiiii = Module["dynCall_iiiiii"] = asm["dynCall_iiiiii"];
+var dynCall_viiiiiiffii = Module["dynCall_viiiiiiffii"] = asm["dynCall_viiiiiiffii"];
 var dynCall_viidii = Module["dynCall_viidii"] = asm["dynCall_viidii"];
+var dynCall_iiiiiifiif = Module["dynCall_iiiiiifiif"] = asm["dynCall_iiiiiifiif"];
 var dynCall_viiii = Module["dynCall_viiii"] = asm["dynCall_viiii"];
 var dynCall_viiiii = Module["dynCall_viiiii"] = asm["dynCall_viiiii"];
 var dynCall_vif = Module["dynCall_vif"] = asm["dynCall_vif"];
@@ -19023,14 +19525,21 @@ var dynCall_vid = Module["dynCall_vid"] = asm["dynCall_vid"];
 var dynCall_iiidi = Module["dynCall_iiidi"] = asm["dynCall_iiidi"];
 var dynCall_vii = Module["dynCall_vii"] = asm["dynCall_vii"];
 var dynCall_difi = Module["dynCall_difi"] = asm["dynCall_difi"];
-var dynCall_viidi = Module["dynCall_viidi"] = asm["dynCall_viidi"];
+var dynCall_fi = Module["dynCall_fi"] = asm["dynCall_fi"];
+var dynCall_iiififiiii = Module["dynCall_iiififiiii"] = asm["dynCall_iiififiiii"];
 var dynCall_vf = Module["dynCall_vf"] = asm["dynCall_vf"];
-var dynCall_viiiiiiffii = Module["dynCall_viiiiiiffii"] = asm["dynCall_viiiiiiffii"];
+var dynCall_fiiiiiiiifiiiif = Module["dynCall_fiiiiiiiifiiiif"] = asm["dynCall_fiiiiiiiifiiiif"];
 var dynCall_viffffii = Module["dynCall_viffffii"] = asm["dynCall_viffffii"];
+var dynCall_vifiii = Module["dynCall_vifiii"] = asm["dynCall_vifiii"];
 var dynCall_diiii = Module["dynCall_diiii"] = asm["dynCall_diiii"];
 var dynCall_viiiiiiiiiiiii = Module["dynCall_viiiiiiiiiiiii"] = asm["dynCall_viiiiiiiiiiiii"];
+var dynCall_iiiiiiiiiiffffii = Module["dynCall_iiiiiiiiiiffffii"] = asm["dynCall_iiiiiiiiiiffffii"];
+var dynCall_iiiiifi = Module["dynCall_iiiiifi"] = asm["dynCall_iiiiifi"];
 var dynCall_viiiiiiii = Module["dynCall_viiiiiiii"] = asm["dynCall_viiiiiiii"];
+var dynCall_iif = Module["dynCall_iif"] = asm["dynCall_iif"];
+var dynCall_vifiiii = Module["dynCall_vifiiii"] = asm["dynCall_vifiiii"];
 var dynCall_viiiiiii = Module["dynCall_viiiiiii"] = asm["dynCall_viiiiiii"];
+var dynCall_vifiiiiiiiiiiiiiiiiii = Module["dynCall_vifiiiiiiiiiiiiiiiiii"] = asm["dynCall_vifiiiiiiiiiiiiiiiiii"];
 var dynCall_viiiiiiiii = Module["dynCall_viiiiiiiii"] = asm["dynCall_viiiiiiiii"];
 var dynCall_viiiiiif = Module["dynCall_viiiiiif"] = asm["dynCall_viiiiiif"];
 var dynCall_iii = Module["dynCall_iii"] = asm["dynCall_iii"];
@@ -19038,11 +19547,13 @@ var dynCall_viifiii = Module["dynCall_viifiii"] = asm["dynCall_viifiii"];
 var dynCall_iiiifii = Module["dynCall_iiiifii"] = asm["dynCall_iiiifii"];
 var dynCall_f = Module["dynCall_f"] = asm["dynCall_f"];
 var dynCall_vffff = Module["dynCall_vffff"] = asm["dynCall_vffff"];
+var dynCall_viiiifiiiiif = Module["dynCall_viiiifiiiiif"] = asm["dynCall_viiiifiiiiif"];
 var dynCall_viififi = Module["dynCall_viififi"] = asm["dynCall_viififi"];
 var dynCall_viii = Module["dynCall_viii"] = asm["dynCall_viii"];
 var dynCall_iiidii = Module["dynCall_iiidii"] = asm["dynCall_iiidii"];
 var dynCall_viif = Module["dynCall_viif"] = asm["dynCall_viif"];
 var dynCall_fiiifi = Module["dynCall_fiiifi"] = asm["dynCall_fiiifi"];
+var dynCall_iiiifi = Module["dynCall_iiiifi"] = asm["dynCall_iiiifi"];
 var dynCall_vd = Module["dynCall_vd"] = asm["dynCall_vd"];
 var dynCall_fiifi = Module["dynCall_fiifi"] = asm["dynCall_fiifi"];
 var dynCall_vi = Module["dynCall_vi"] = asm["dynCall_vi"];
@@ -19051,29 +19562,37 @@ var dynCall_viiififii = Module["dynCall_viiififii"] = asm["dynCall_viiififii"];
 var dynCall_ii = Module["dynCall_ii"] = asm["dynCall_ii"];
 var dynCall_vifffi = Module["dynCall_vifffi"] = asm["dynCall_vifffi"];
 var dynCall_viifi = Module["dynCall_viifi"] = asm["dynCall_viifi"];
+var dynCall_iiiiifiiiiii = Module["dynCall_iiiiifiiiiii"] = asm["dynCall_iiiiifiiiiii"];
+var dynCall_iiiiifiiiiif = Module["dynCall_iiiiifiiiiif"] = asm["dynCall_iiiiifiiiiif"];
 var dynCall_viiff = Module["dynCall_viiff"] = asm["dynCall_viiff"];
 var dynCall_iifi = Module["dynCall_iifi"] = asm["dynCall_iifi"];
 var dynCall_vidii = Module["dynCall_vidii"] = asm["dynCall_vidii"];
+var dynCall_viiif = Module["dynCall_viiif"] = asm["dynCall_viiif"];
 var dynCall_fifffi = Module["dynCall_fifffi"] = asm["dynCall_fifffi"];
+var dynCall_vifiiiiiiiiiiiiiiiiiiiiiii = Module["dynCall_vifiiiiiiiiiiiiiiiiiiiiiii"] = asm["dynCall_vifiiiiiiiiiiiiiiiiiiiiiii"];
+var dynCall_iiiffii = Module["dynCall_iiiffii"] = asm["dynCall_iiiffii"];
 var dynCall_iiifi = Module["dynCall_iiifi"] = asm["dynCall_iiifi"];
 var dynCall_iiii = Module["dynCall_iiii"] = asm["dynCall_iiii"];
 var dynCall_fidi = Module["dynCall_fidi"] = asm["dynCall_fidi"];
 var dynCall_viifff = Module["dynCall_viifff"] = asm["dynCall_viifff"];
-var dynCall_viiffiii = Module["dynCall_viiffiii"] = asm["dynCall_viiffiii"];
+var dynCall_viiffi = Module["dynCall_viiffi"] = asm["dynCall_viiffi"];
 var dynCall_iiid = Module["dynCall_iiid"] = asm["dynCall_iiid"];
 var dynCall_iiif = Module["dynCall_iiif"] = asm["dynCall_iiif"];
 var dynCall_diiiii = Module["dynCall_diiiii"] = asm["dynCall_diiiii"];
 var dynCall_viiifi = Module["dynCall_viiifi"] = asm["dynCall_viiifi"];
 var dynCall_fiiffi = Module["dynCall_fiiffi"] = asm["dynCall_fiiffi"];
 var dynCall_iiiiiiiiiiiii = Module["dynCall_iiiiiiiiiiiii"] = asm["dynCall_iiiiiiiiiiiii"];
+var dynCall_iiiifiii = Module["dynCall_iiiifiii"] = asm["dynCall_iiiifiii"];
 var dynCall_ff = Module["dynCall_ff"] = asm["dynCall_ff"];
 var dynCall_iidii = Module["dynCall_iidii"] = asm["dynCall_iidii"];
-var dynCall_fi = Module["dynCall_fi"] = asm["dynCall_fi"];
+var dynCall_iiiifiiiii = Module["dynCall_iiiifiiiii"] = asm["dynCall_iiiifiiiii"];
 var dynCall_iiiiiiiiiiiiiii = Module["dynCall_iiiiiiiiiiiiiii"] = asm["dynCall_iiiiiiiiiiiiiii"];
 var dynCall_viiffffiii = Module["dynCall_viiffffiii"] = asm["dynCall_viiffffiii"];
 var dynCall_vfi = Module["dynCall_vfi"] = asm["dynCall_vfi"];
 var dynCall_i = Module["dynCall_i"] = asm["dynCall_i"];
 var dynCall_vff = Module["dynCall_vff"] = asm["dynCall_vff"];
+var dynCall_viiifiiiii = Module["dynCall_viiifiiiii"] = asm["dynCall_viiifiiiii"];
+var dynCall_vidi = Module["dynCall_vidi"] = asm["dynCall_vidi"];
 var dynCall_iiiiiiiii = Module["dynCall_iiiiiiiii"] = asm["dynCall_iiiiiiiii"];
 var dynCall_viffffi = Module["dynCall_viffffi"] = asm["dynCall_viffffi"];
 Runtime.stackAlloc = asm["stackAlloc"];
